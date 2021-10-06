@@ -1,6 +1,30 @@
 # Estimation of paternity share from PoolSeq data
 
-This repository contains step-by-step instructions to estimate the fertilisation outcome of competitive crosses, where two sires from different populations simultaneously mate or pollinate a dam. The paternity share of the offspring is inferred from the allelic frequency of a set of markers differentially fixed in the sire populations and monomorphic in the dam population for either allele. 
+This repository is part of Henry Arenas-Castro's PhD thesis dissertation at the University of Queensland and contains step-by-step instructions to estimate the fertilisation outcome of competitive crosses from PoolSeq data. Maddie E. James assisted with data analysis and Daniel Ortiz-Barrientos and Jan Engelstädter supervised this project.
+
+## Fertilisation null model
+
+In absence of fertilisation biases, it is expected that when two sires simultaneously mate or pollinate a dam, each sire fertilises half of the available ovules. Consequently, the estimation of paternity share in the offspring may be used to test for deviations in the fertilisation outcome, proven that other technical and biological factors are controlled (see below).
+
+![Alt text](Figures/Figure_FertilisationBias.png?raw=true "Title")
+
+Traditional approaches have estimated the paternity share of the offspring by genotyping each individual. However, this is infeasible in large-scale studies. Here, we develop a method to estimate the paternity share in the offspring of competitive crosses using PoolSeq data. Instead of individually genotyping the offspring, we pooled equal amount of tissue from each individual, homogenise them, extracted DNA, prepared RAD-seq libraries, and sequenced a single sample per cross.
+
+To infer the paternity share of the offspring, we (*i*) identified paternity markers based on the genetic variation of the populations of the parentals and (*ii*) estimated the allelic frequency of these markers in the offspring. 
+
+
+
+
+
+a set of markers differentially fixed in the sire populations and monomorphic in the dam population for any allele. The allelic frequencies in the offspring is estimated from the read counts of PoolSeq data. 
+
+
+
+The diagram below provides an example of the expected allelic frequencies of the offspring for a paternity marker depending on whether the dam shares the same allele with one of the sires or not.
+
+
+
+![Alt text](Figures/Figure_DiagramPaternityMarkers.png?raw=true "Title")
 
 
 
