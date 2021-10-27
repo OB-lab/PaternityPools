@@ -64,13 +64,64 @@ java -jar picard.jar AddOrReplaceReadGroups INPUT=ind1_sorted_cleaned.bam OUTPUT
 
 ### SNP calling
 
-We used ```FreeBayes``` to jointly call SNPs for each set of dams and sires per population. Joint calling assumes all samples are genetically similar and uses information across all samples to call a SNP. SNPs from these cohorts are then combined into one VCF file. The code below shows an example where ```ind1```, ```ind2```, and ```ind3``` conform the set of sires from ```pop1```.
+We used ```FreeBayes``` to jointly call SNPs for each set of dams and sires per population. Joint calling assumes all samples are genetically similar and uses information across all samples to call a SNP. SNPs from these cohorts are then combined into one VCF file. The code below shows an example where ```ind1```, ```ind2```, and ```ind3``` conform the set of dams from ```pop1```.
 
 ```
-freebayes -f Senecio.contigs.fasta ind1_sorted_cleaned_rg.bam ind2_sorted_cleaned_rg.bam ind3_sorted_cleaned_rg.bam --use-best-n-alleles 4 --report-monomorphic --genotype-qualities > sires_pop1.vcf
+freebayes -f Senecio.contigs.fasta ind1_sorted_cleaned_rg.bam ind2_sorted_cleaned_rg.bam ind3_sorted_cleaned_rg.bam --use-best-n-alleles 4 --report-monomorphic --genotype-qualities > pop1_dams.vcf
 ```
 
 ### SNP filtering
+
+For each cross, or pool, we used ```bcftools view``` to subsample the individuals that effectively served as sires and dams. The ```-s``` flag specifies the name of the individuals to sample from the population's VCF (i.e. only ind1 and ind3 from the step above).
+
+```
+bcftools view -s ind1,ind3 pop1_dams.vcf > pop1_dams_ind.vcf
+```
+
+Before starting to filter the SNPs, we used ```bgzip``` and ```tabix``` to compress and index each VCF.
+
+```
+bgzip -c pop1_dams_ind.vcf > pop1_dams_ind.vcf.gz
+tabix -p vcf pop1_dams_ind.vcf.gz
+```
+
+To identify and retain the sites that vary among the three parental populations, we used ```bcftools merge``` and ```vcftools``` to merge the VCFs and keep the sites genotyped in at least 50% of individuals with a minimum quality score of 30.
+
+```
+bcftools merge pop1_dams_ind.vcf.gz pop2_sires_ind.vcf.gz pop3_sires_ind.vcf.gz -o Pool1.vcf
+vcftools --gzvcf Pool1.vcf --max-missing 0.5 --mac 1 --minQ 30 --recode --recode-INFO-all --stdout | gzip -c > Pool1_Q30mac1.vcf.gz
+```
+
+We applied a minimum depth per sample of 3 reads (genotypes with less than 3 reads were recoded as missing data).
+
+```
+vcftools --gzvcf Pool1_Q30mac1.vcf.gz --minDP 3 --recode --recode-INFO-all --stdout > Pool1_Q30mac1dp3.vcf
+```
+
+Sites with high coverage could be multi-copy regions of the genome, so we removed these potential paralogues. We first calculated the mean depth per site after pooling the VCFs of all the individuals used in this study and plot their distribution in ```R```. Then, we visually examined the distribution of mean read depth across all sites and selected a threshold value of 250.
+
+```
+vcftools --vcf Pool1_Q30mac1dp3.vcf --site-mean-depth --out mean_depth
+```
+
+![Alt text](Figures/Figure_MeanReadDepth.png?raw=true "Title")
+
+```
+vcftools --vcf  Pool1_Q30mac1dp3.vcf --recode --recode-INFO-all --out Pool1_Q30mac1dp3MaxDP250 --max-meanDP 250
+```
+
+We then filtered for a minimum mean depth of 10.
+
+```
+vcftools --vcf Pool1_Q30mac1dp3MaxDP250.recode.vcf --min-meanDP 10 --recode --recode-INFO-all --out Pool1_Q30mac1dp3MaxDP250MinDP10
+```
+
+We additionally filtered for an overall missing data, removing sites if they had greater than 20% missing data.
+
+```
+vcftools --vcf Pool1_Q30mac1dp3MaxDP250MinDP10.recode.vcf --recode --recode-INFO-all --max-missing 0.8 --out Pool1_Q30mac1dp3MaxDP250MinDP10md80
+```
+
 
 
 
