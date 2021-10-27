@@ -20,7 +20,7 @@ In the case of competitive crosses between sires from different populations, the
 
 All the parental individuals used in the competitive crosses (N=139) were individually genotyped following James et al. (2021) RAD-seq protocol. Then, we jointly called the SNPs for each set of individuals used either as dams or sires per population to identify the sites that were monomorphic. Finally, we identified those sites that had differentially fixed alleles between the sire populations.
 
-### Reference genome indexing
+### Indexing of reference genome
 
 We used ```bwa``` to index the *Senecio lautus* reference genome version *SPD_CN1K_CtgRN*.
 
@@ -28,7 +28,7 @@ We used ```bwa``` to index the *Senecio lautus* reference genome version *SPD_CN
 bwa index Senecio.contigs.fasta
 ```
 
-### Reads alignment to the reference genome
+### Alignment of reads to the reference genome
 
 For each individual, we aligned their reads to the reference genome with the ```BWA-MEM``` algorithm. The ```*_1.fq.gz``` and ```*_2.fq.gz``` files correspond to the forward and reverse read files for each individual. We further used ```samtools``` to filter for mapping quality ```-q 20```.
 
