@@ -122,12 +122,96 @@ We additionally filtered for an overall missing data, removing sites if they had
 vcftools --vcf Pool1_Q30mac1dp3MaxDP250MinDP10.recode.vcf --recode --recode-INFO-all --max-missing 0.8 --out Pool1_Q30mac1dp3MaxDP250MinDP10md80
 ```
 
+Finally, we used ```plink``` to split the merged VCF into the original dam and sire populations. To specify the name of the individuals that composed each population, we prepared a tab-delimited three-column popmap file per population. The first two columns had the name of the individual and the third column the number 1. Each file contained one row per individual.
+
+```
+plink --vcf Pool1_Q30mac1dp3MaxDP250MinDP10mpp20md80.recode.vcf --keep pop1_dams_popmap.txt --export vcf --allow-extra-chr --out pop1_dams_filtered
+```
+
+### Identification of paternity markers
+
+We calculated the allelic frequencies per loci in each parental population per pool using ```plink2```.
+
+```
+plink2 --vcf pop1_dams_filtered.vcf --freq --allow-extra-chr --out Pool1_dam --set-all-var-ids @:#
+```
+
+We then used ```R``` to identify the paternity markers across the 226 pools of this study. 
+
+```
+# Emtpy table to summarise results
+results <- matrix(NA, nrow=226, ncol=2)
+
+# Repeat this operation across all pools
+for (i in 1:226) {
+  
+  # DAM
+  # Open file with the allelic frequencies per site
+  dam <- read.csv(paste("Pool", i, "_dam.afreq", sep=""), sep="", header=T) # Any lenght white space delimiter
+  # Remove sites with missing data
+  dam <- dam[dam[,6]==max(dam[,6]),]
+  # Remove sites with indels
+  dam <- dam[dam[,3]=="A" | dam[,3]=="G" | dam[,3]=="C" | dam[,3]=="T",]
+  dam <- dam[dam[,4]=="A" | dam[,4]=="G" | dam[,4]=="C" | dam[,4]=="T",]
+  # Remove polymorphic sites
+  dam <- dam[dam[,5]==0,]
+  # Keep only location (col 2) and major allele (col 4)
+  dam <- dam[,c(2,4)]
+  
+  # SIRE 1
+  sire1 <- read.csv(paste("Pool", i, "_sire1.afreq", sep=""), sep="", header=T) # Any lenght white space delimiter
+  # Remove sites with missing data
+  sire1 <- sire1[sire1[,6]==max(sire1[,6]),]
+  # Remove sites with indels
+  sire1 <- sire1[sire1[,3]=="A" | sire1[,3]=="G" | sire1[,3]=="C" | sire1[,3]=="T",]
+  sire1 <- sire1[sire1[,4]=="A" | sire1[,4]=="G" | sire1[,4]=="C" | sire1[,4]=="T",]
+  # Remove polymorphic sites
+  sire1 <- sire1[sire1[,5]==0,]
+  # Keep only location (col 2) and major allele (col 4)
+  sire1 <- sire1[,c(2,4)]
+  
+  # SIRE 2
+  sire2 <- read.csv(paste("Pool", i, "_sire2.afreq", sep=""), sep="", header=T) # Any lenght white space delimiter
+  # Remove sites with missing data
+  sire2 <- sire2[sire2[,6]==max(sire2[,6]),]
+  # Remove sites with indels
+  sire2 <- sire2[sire2[,3]=="A" | sire2[,3]=="G" | sire2[,3]=="C" | sire2[,3]=="T",]
+  sire2 <- sire2[sire2[,4]=="A" | sire2[,4]=="G" | sire2[,4]=="C" | sire2[,4]=="T",]
+  # Remove polymorphic sites
+  sire2 <- sire2[sire2[,5]==0,]
+  # Keep only location (col 2) and major allele (col 4)
+  sire2 <- sire2[,c(2,4)]
+  
+  # Monomorphic sites across sire populations
+  mono <- intersect(sire1[,1], sire2[,1])
+  sire1 <- sire1[which(sire1[,1] %in% mono),]
+  sire2 <- sire2[which(sire2[,1] %in% mono),]
+    
+  # Merge
+  sire12 <- merge(sire1, sire2, by=1)
+  sire12 <- droplevels(sire12)
+    
+  # Differentially fixed alleles
+  diff <- sire12[which(sire12[,2] != sire12[,3]),]
+  
+  # Common monomorphic between the dam and the sires
+  dam <- dam[which(dam[,1] %in% diff[,1]),]
+  trio <- merge(diff, dam, by=1)
+  colnames(trio) <- c("POSITION", "SIRE1", "SIRE2", "DAM")
+      
+  # Output results
+  write.table(trio, paste("Pool", i, "_markers.txt", sep=""), 
+                  quote=F, row.names=F, sep="\t", col.names=T)
+  
+  results[i,] <- c(paste("Pool", i, sep=""), nrow(trio))
+  
+}
+
+
+# Save results
+colnames(results) <- c("POOL", "MARKERS")
+write.table(results, "PaternityMarkers.txt", quote=F, row.names=F, sep="\t", col.names=T)
+```
 
 
 
-
-
-
-## References
-
-James ME, Arenas-Castro H, Groh JS, Engelstädter J, Allen SL, Ortiz-Barrientos D. 2021. Highly replicated evolution of parapatric ecotypes. Molecular Biology and Evolution, In press.
