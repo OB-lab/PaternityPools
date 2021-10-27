@@ -153,10 +153,10 @@ for (i in 1:226) {
   # Remove sites with indels
   dam <- dam[dam[,3]=="A" | dam[,3]=="G" | dam[,3]=="C" | dam[,3]=="T",]
   dam <- dam[dam[,4]=="A" | dam[,4]=="G" | dam[,4]=="C" | dam[,4]=="T",]
-  # Remove polymorphic sites
+  # Remove polymorphic sites (MAC=0)
   dam <- dam[dam[,5]==0,]
-  # Keep only location (col 2) and major allele (col 4)
-  dam <- dam[,c(2,4)]
+  # Keep only location (col 2) and major allele (col 3)
+  dam <- dam[,c(2,3)]
   
   # SIRE 1
   sire1 <- read.csv(paste("Pool", i, "_sire1.afreq", sep=""), sep="", header=T) # Any lenght white space delimiter
@@ -165,10 +165,10 @@ for (i in 1:226) {
   # Remove sites with indels
   sire1 <- sire1[sire1[,3]=="A" | sire1[,3]=="G" | sire1[,3]=="C" | sire1[,3]=="T",]
   sire1 <- sire1[sire1[,4]=="A" | sire1[,4]=="G" | sire1[,4]=="C" | sire1[,4]=="T",]
-  # Remove polymorphic sites
+  # Remove polymorphic sites (MAC=0)
   sire1 <- sire1[sire1[,5]==0,]
-  # Keep only location (col 2) and major allele (col 4)
-  sire1 <- sire1[,c(2,4)]
+  # Keep only location (col 2) and major allele (col 3)
+  sire1 <- sire1[,c(2,3)]
   
   # SIRE 2
   sire2 <- read.csv(paste("Pool", i, "_sire2.afreq", sep=""), sep="", header=T) # Any lenght white space delimiter
@@ -177,10 +177,10 @@ for (i in 1:226) {
   # Remove sites with indels
   sire2 <- sire2[sire2[,3]=="A" | sire2[,3]=="G" | sire2[,3]=="C" | sire2[,3]=="T",]
   sire2 <- sire2[sire2[,4]=="A" | sire2[,4]=="G" | sire2[,4]=="C" | sire2[,4]=="T",]
-  # Remove polymorphic sites
+  # Remove polymorphic sites (MAC=0)
   sire2 <- sire2[sire2[,5]==0,]
-  # Keep only location (col 2) and major allele (col 4)
-  sire2 <- sire2[,c(2,4)]
+  # Keep only location (col 2) and major allele (col 3)
+  sire2 <- sire2[,c(2,3)]
   
   # Monomorphic sites across sire populations
   mono <- intersect(sire1[,1], sire2[,1])
