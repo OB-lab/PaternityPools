@@ -98,7 +98,7 @@ We applied a minimum depth per sample of 3 reads (genotypes with less than 3 rea
 vcftools --gzvcf Pool1_Q30mac1.vcf.gz --minDP 3 --recode --recode-INFO-all --stdout > Pool1_Q30mac1dp3.vcf
 ```
 
-Sites with high coverage could be multi-copy regions of the genome, so we removed these potential paralogues. We first calculated the mean depth per site after pooling the VCFs of all the individuals used in this study and plot their distribution in ```R```. Then, we visually examined the distribution of mean read depth across all sites and selected a threshold value of 250.
+Sites with high coverage could be multi-copy regions of the genome, so we removed these potential paralogues. We first calculated the mean depth per site after pooling the VCFs of all the individuals used in this study and plot their distribution in ```R``` (min=1.8, max=2416.3). Then, we visually examined the distribution of mean read depth across all sites and selected a threshold value of 250.
 
 ```
 vcftools --vcf Pool1_Q30mac1dp3.vcf --site-mean-depth --out mean_depth
@@ -212,6 +212,13 @@ for (i in 1:226) {
 colnames(results) <- c("POOL", "MARKERS")
 write.table(results, "PaternityMarkers.txt", quote=F, row.names=F, sep="\t", col.names=T)
 ```
+
+The number of paternity markers per pool ranged from 1 to 410, with an average value of 101.
+
+![Alt text](Figures/Figure_PaternityMarkersPerPool.png?raw=true "Title")
+
+## Pool-Seq genotyping
+
 
 
 
