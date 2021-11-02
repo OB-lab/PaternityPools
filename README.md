@@ -249,6 +249,102 @@ SPDCN1KCT_24	9459	N	2	G/T	0	pop	TG	NN	20/20	21/21	0/20	0/21
 
 ### Allelic frequency estimation of paternity markers
 
+We used ```R``` to match the paternity markers with the SNPs effectively called in the pools and extract their allelic frequencies.
+
+```
+# Plot histograms
+par(mfrow=c(3,6), mar=c(3,5,7,3)) # CHANGE ACCORDING THE NUMBER OF POOLS
+
+# Emtpy table to summarise results
+results <- matrix(NA, nrow=226, ncol=8)
+
+# Doing this in all pairs, from pool1-2 to pool225-226
+for (s in seq(1, 225, 2)) {
+  
+  # Position of the pool in the PoPoolation2 output
+  order <- c(paste("Pool", s, sep=""), paste("Pool", s+1, sep=""))
+  
+  for (p in 1:length(order)) {
+  
+    # List of paternity markers per pool
+    marker <- read.csv(paste("~/Dropbox/_PhD_OB/Data/9_PaternityAssignment/afreq/", order[p], "_markers.txt", sep=""), sep="\t", header=T)
+    
+    # PoPoolation2 output file (*_rc)
+    pool <- read.csv(paste("pool",s,"-",s+1,"_rc", sep=""), sep="\t", header=T) 
+    
+    # Create a new column in the pool matrix with the position of the SNP as it is in the marker matrix
+    pool$POSITION <- paste(pool[,1], pool[,2], sep=":")
+    
+    # Paternity markers called as SNPs in the pools
+    pool <- pool[which(pool$POSITION %in% marker$POSITION),]
+    
+    # Keep only these columuns: POSITION, ALLELE COUNT, ALLELE STATES, MAJOR ALLELE, MINOR ALLELE, MAJOR ALLELE COUNT
+    pool <- pool[,c(ncol(pool), 4, 5, 8, 9, 9+p)]
+    
+    # Get the right major and minor allele for the pool instead of a block for all the pools in the group
+    pool$major_alleles.maa. <- as.character(pool$major_alleles.maa.) # Major allele 
+    pool$minor_alleles.mia. <- as.character(pool$minor_alleles.mia.) # Minor allele
+    for (i in 1:nrow(pool)) {
+      pool$major_alleles.maa.[i] <- strsplit(pool$major_alleles.maa.[i], "")[[1]][p]
+      pool$minor_alleles.mia.[i] <- strsplit(pool$minor_alleles.mia.[i], "")[[1]][p]
+    }
+    
+    # Merge the paternity marker and pool information
+    pool <- merge(pool, marker, by=1)
+    
+    # Calculate the allelic frequencies (Dam allele as reference)
+    pool[,6] <- as.character(pool[,6]) # Allelic count
+    pool[,9] <- as.character(pool[,9]) # Dam allele
+    pool$freq <- NA # Create a new column
+    for (j in 1:nrow(pool)) {
+      
+      # Check that the major allele corresponds to the dam's allele
+      if (pool[j,4] == pool[j,9]) {
+        afreq <- strsplit(pool[j,6], "/")
+        pool$freq[j] <- as.numeric(afreq[[1]][1])/as.numeric(afreq[[1]][2])
+      }
+      # Ohterwise output the minor allele frequency
+      else {
+        pool$freq[j] <- 1-(as.numeric(afreq[[1]][1])/as.numeric(afreq[[1]][2]))
+      }
+    }
+    
+    # Note whether the dam share its allele with sire1 or sire2
+    pool$DAM_ALLELE <- NA
+    pool[which(pool[,9] == pool[,7]), 11] <- "sire1"
+    pool[which(pool[,9] == pool[,8]), 11] <- "sire2"
+    
+    # Save the results per pool
+    write.table(pool, paste(order[p], "_FreqMarkers.txt", sep=""), quote=F, row.names=F, sep="\t", col.names=T)
+    
+    # Allele frequency distribution per pool
+    boxplot(pool[pool$DAM_ALLELE=="sire1",10], pool[pool$DAM_ALLELE=="sire2",10], ylim=c(0,1), cex.main=2, axes=F,
+            main=paste(order[p], "\nN=", length(pool[pool$DAM_ALLELE=="sire1",10]),"+",length(pool[pool$DAM_ALLELE=="sire2",10]), sep=""))
+    axis(2,cex.axis=2)
+    abline(h=0.75, lty="longdash", col="grey50", lwd=1.5)
+    
+    # Summarise the results across all pools
+    # Col 1: Pool name
+    # Col 2: Total number markers
+    # Col 3: Number of dam alleles similar to sire1
+    # Col 4: Mean allelic freq. of dam alleles similar to sire1
+    # Col 5: SD of mean allelic freq. of dam alleles similar to sire1
+    # Col 6: Number of dam alleles similar to sire2
+    # Col 7: Mean allelic freq. of dam alleles similar to sire2
+    # Col 8: SD of mean allelic freq. of dam alleles similar to sire2
+    results[s+p-1,] <- c(order[p], nrow(pool), 
+                     length(pool[pool$DAM_ALLELE=="sire1",10]), mean(pool[pool$DAM_ALLELE=="sire1",10]), sd(pool[pool$DAM_ALLELE=="sire1",10]),
+                     length(pool[pool$DAM_ALLELE=="sire2",10]), mean(pool[pool$DAM_ALLELE=="sire2",10]), sd(pool[pool$DAM_ALLELE=="sire2",10]))
+  }
+
+}
+  
+# Save summary of results
+colnames(results) <- c("POOL", "MARKERS", "N_SIRE1", "MEAN_SIRE1", "SD_SIRE1", "N_SIRE2", "MEAN_SIRE2", "SD_SIRE2")
+write.table(results, "PaternityResults.txt", quote=F, row.names=F, sep="\t", col.names=T)
+```
+
+
 
 
 
