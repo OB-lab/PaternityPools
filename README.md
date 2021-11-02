@@ -219,6 +219,36 @@ The number of paternity markers per pool ranged from 1 to 410, with an average v
 
 ## Pool-Seq genotyping
 
+Similar to the parental individuals, all the pools (N=226) were individually genotyped following James et al. (2021) RAD-seq protocol. We also mapped the reads to the reference genome using ```BWA-MEM``` and removed ambiguosly mapped reads with ```samtools```.
+
+### SNP calling
+
+Since each pool contains DNA from multiple individuals, we used ```PoPoolation2``` to call the SNPs. This is a reliable program to calculate allelic frequencies from pooled DNA samples.
+
+We jointly called the SNPs by pool pairs. For this, we firt created a pileup file for each pair using ```samtools``` and then synchronised it with ```mpileup2sync```. 
+
+```
+samtools mpileup -B pool1_sorted.bam pool2_sorted.bam > pool1-2.mpileup
+java -ea -Xmx7g -jar mpileup2sync.jar --input pool1-2.mpileup --output pool1-2.sync --fastq-type sanger --min-qual 20 --threads 12
+```
+
+This file contains the allele frequencies of each pool across all the mapped positions and serves as input for ```PoPoolation2```. 
+
+```
+perl snp-frequency-diff.pl --input pool1-2.sync --output-prefix pool1-2 --min-count 6 --min-coverage 25 --max-coverage 250
+```
+
+```PoPoolation2``` output two files: ```*_rc``` and ```*_pwc```. The former one contains the count of the major and minor allele in a concise format:
+
+```
+##chr	pos	rc	allele_count	allele_states	deletion_sum	snp_type	major_alleles(maa)	minor_alleles(mia)	maa_1	maa_2	mia_1	mia_2
+SPDCN1KCT_24	9367	N	2	C/G	0	pop	CC	GG	21/28	24/28	7/28	4/28
+SPDCN1KCT_24	9404	N	2	A/C	0	pop	AC	NA	28/28	19/28	0/28	9/28
+SPDCN1KCT_24	9459	N	2	G/T	0	pop	TG	NN	20/20	21/21	0/20	0/21
+```
+
+### Allelic frequency estimation of paternity markers
+
 
 
 
